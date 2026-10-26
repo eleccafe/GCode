@@ -63,7 +63,9 @@ scripts/          데이터 생성·변환, 독립 검증, 번들 크기 검사
 
 ## 검증 상태
 
-이 구현 환경은 npm 레지스트리 네트워크 연결이 차단되고 의존성 캐시도 없었습니다. **Vite 빌드, Vitest 커버리지, Playwright 브라우저 테스트, 실제 PWA 설치/오프라인, 200KB 번들 및 응답 지연은 아직 실행 검증하지 못했습니다.** 커버리지 90%를 달성했다고 주장하지 않습니다. Vitest의 lines/functions/branches/statements 기준을 각각 90%로 설정했습니다.
+의존성 설치 후 TypeScript 전체 타입 검사와 Vite 프로덕션 빌드를 통과했습니다. 단위 테스트 54개가 통과했고 이론 모듈의 lines/functions/branches/statements 커버리지는 모두 100%입니다.
+
+GitHub Pages와 같은 `/GCode/` 경로로 빌드한 결과를 로컬 Chrome에서 검증했습니다. 데스크톱·360px 모바일 Playwright 테스트 12개가 통과했으며 입력, 코드 전환, 뒤로 가기, 설정 저장, 스와이프, 오프라인 재방문, 배포 경로 안의 JavaScript 및 서비스 워커 범위를 포함합니다. 전체 오프라인 앱의 gzip 합계는 76.5 KiB입니다. 실제 GitHub Pages 게시 결과, 홈 화면 설치와 100ms 응답 지연은 별도 확인이 필요합니다.
 
 외부 의존성이 필요 없는 Node.js 검증은 실행 가능합니다(Node 22.13+):
 
@@ -73,12 +75,21 @@ npm.cmd run test:offline
 
 이 검증은 실제 TypeScript 이론 코드를 Node의 타입 제거 기능으로 실행합니다. 144개 코드와 모든 보이싱의 음 구성, 손가락 번호, 바레 장애물, 프렛 범위, 입력 정규화, 관련 코드 정렬 및 키별 철자, 슬래시 코드의 실제 베이스음을 검사합니다. 이는 브라우저 테스트나 TypeScript 타입 검사를 대체하지 않습니다.
 
-추가로 로컬 VS Code에 포함된 TypeScript 컴파일러를 사용해 18개 TypeScript/TSX 파일의 문법 검사와 이론·데이터 모듈의 strict 타입 검사를 통과했습니다. React 전체 타입 검사는 의존성 설치 후 `npm run build`로 확인해야 합니다. 별도 컴파일러가 있다면 `node scripts/check-types-offline.mjs <typescript.js 절대 경로>`로 이 검사를 재실행할 수 있습니다.
+별도 TypeScript 컴파일러가 있다면 `node scripts/check-types-offline.mjs <typescript.js 절대 경로>`로 의존성 없이 문법 및 이론·데이터 타입 검사도 실행할 수 있습니다.
 
 ## 배포
 
-현재 폴더에는 Git 원격 저장소 및 호스팅 연결이 없어 배포는 실행하지 않았습니다.
+GitHub 저장소에서 Settings → Pages → Source를 **GitHub Actions**로 지정하면 `main` 푸시 시 테스트와 빌드 후 배포합니다. `Deploy from a branch`로 소스 루트를 게시하지 마세요. 브라우저는 `src/main.tsx`를 직접 실행할 수 없습니다.
 
-GitHub 저장소에 올리고 Settings → Pages → Source를 **GitHub Actions**로 지정하면 `main` 푸시 시 테스트와 빌드 후 배포합니다. 프로젝트 이름에 따른 기본 경로는 workflow에서 설정합니다. 사용자/조직 루트 Pages 저장소는 `VITE_BASE_PATH`를 `/`로 바꾸세요. 첫 성공적인 설치로 생성되는 `package-lock.json`을 커밋하고 CI의 `npm install`을 `npm ci`로 바꾸는 것이 좋습니다.
+워크플로는 `npm ci`로 잠금 파일의 의존성을 설치하고, 프로젝트 배포 경로를 사용하여 E2E 테스트를 실행합니다. 테스트한 `dist`를 다시 빌드하지 않고 그대로 배포합니다. 테스트가 실패하면 배포되지 않으므로 Actions의 마지막 실행 결과를 확인하세요. 사용자/조직 루트 Pages 저장소는 workflow의 `VITE_BASE_PATH`를 `/`로 바꾸세요.
+
+로컬에서 GitHub Pages 경로를 재현하려면:
+
+```powershell
+$env:VITE_BASE_PATH = '/GCode/'
+npm.cmd run test:e2e
+```
+
+제한된 Windows 실행 환경에서 Vite 설정을 읽는 esbuild가 상위 디렉터리 접근 오류를 내면, Node 22.18+ 또는 24에서 `node node_modules/vite/bin/vite.js build --configLoader native`와 `node node_modules/vitest/vitest.mjs run --coverage --configLoader native`로 네이티브 설정 로더를 사용할 수 있습니다. GitHub Actions의 Linux 환경에서는 기본 명령을 사용합니다.
 
 Vercel에서는 Vite 프리셋, 빌드 `npm run build`, 결과 폴더 `dist`, 기본 경로 `/`를 사용합니다. 별도 서버나 비밀 키는 필요하지 않습니다.
