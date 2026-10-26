@@ -1,0 +1,9 @@
+GCode bundled voicings
+
+The initial 144-chord dataset is generated from original standard movable shapes
+by scripts/generate-chords.mjs. It contains no copied third-party chord data.
+
+Optional importer: scripts/import-chords.mjs supports @tombatossals/chords-db
+0.5.1 (MIT, Copyright (c) 2016 David Rubert), and copies its complete license
+when the imported dataset replaces the bundled dataset.
+https://github.com/tombatossals/chords-db

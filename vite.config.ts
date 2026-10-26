@@ -1,0 +1,4 @@
+import { defineConfig } from 'vitest/config';
+import react from '@vitejs/plugin-react';
+import { VitePWA } from 'vite-plugin-pwa';
+export default defineConfig({base: process.env.VITE_BASE_PATH || '/', plugins:[react(),VitePWA({registerType:'autoUpdate',includeAssets:['icon.svg','icon-192.png','icon-512.png','THIRD_PARTY_LICENSES.txt'],manifest:{name:'GCode 기타 코드 뷰어',short_name:'GCode',description:'손끝에서 이어지는 코드',lang:'ko',theme_color:'#f6f4ee',background_color:'#f6f4ee',display:'standalone',icons:[{src:'icon-192.png',sizes:'192x192',type:'image/png'},{src:'icon-512.png',sizes:'512x512',type:'image/png',purpose:'any maskable'}]},workbox:{navigateFallback:'index.html'}})],test:{include:['src/**/*.test.ts'],coverage:{provider:'v8',include:['src/theory/**/*.ts'],exclude:['src/theory/**/*.test.ts','src/theory/types.ts'],thresholds:{lines:90,functions:90,branches:90,statements:90}}}});
